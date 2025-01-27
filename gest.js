@@ -1,33 +1,3 @@
-/* 
- * @name: gest.js
- * @description: gest.js is a webcam based gesture recognition library that helps developers make webpages more immersive
- * @version: 0.5.0
- * @author: Hadi Michael (http://hadi.io)
- * @acknowledgements: gest.js is an extension of work started by William Wu (https://github.com/wvvvw)
- * @license: MIT License
-	The MIT License (MIT)
-
-	Copyright (c) 2013-2014 Hadi Michael (http://hadi.io)
-
-	Permission is hereby granted, free of charge, to any person obtaining a copy
-	of this software and associated documentation files (the "Software"), to deal
-	in the Software without restriction, including without limitation the rights
-	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-	copies of the Software, and to permit persons to whom the Software is
-	furnished to do so, subject to the following conditions:
-
-	The above copyright notice and this permission notice shall be included in
-	all copies or substantial portions of the Software.
-
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-	THE SOFTWARE.
-*/
-
 window.gest = (function (window) {
 	"use strict";
 
@@ -405,31 +375,31 @@ window.gest = (function (window) {
 						});
 					}
 
-					// if (dy > this.minDirChange && !dirx) {
-					// 	if (Math.abs(dy) > this.longDirChange) {
-					// 		dispatchGestEvent({
-					// 			direction: 'Long down',
-					// 			down: true
-					// 		});
-					// 	} else {
-					// 		dispatchGestEvent({
-					// 			direction: 'Down',
-					// 			down: true
-					// 		});
-					// 	}
-					// } else if (dy < -this.minDirChange && !dirx) {
-					// 	if (Math.abs(dy) > this.minDirChange) {
-					// 		dispatchGestEvent({
-					// 			direction: 'Long up',
-					// 			up: true
-					// 		});
-					// 	} else {
-					// 		dispatchGestEvent({
-					// 			direction: 'Up',
-					// 			up: true
-					// 		});
-					// 	}
-					// }
+					if (dy > this.minDirChange && !dirx) {
+						if (Math.abs(dy) > this.longDirChange) {
+							dispatchGestEvent({
+								direction: 'Long down',
+								down: true
+							});
+						} else {
+							dispatchGestEvent({
+								direction: 'Down',
+								down: true
+							});
+						}
+					} else if (dy < -this.minDirChange && !dirx) {
+						if (Math.abs(dy) > this.minDirChange) {
+							dispatchGestEvent({
+								direction: 'Long up',
+								up: true
+							});
+						} else {
+							dispatchGestEvent({
+								direction: 'Up',
+								up: true
+							});
+						}
+					}
 					break;
 
 				case 2:
