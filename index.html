@@ -1,659 +1,362 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Gesture Recognition Comparison</title>
-    <!-- Import Libraries -->
-    <!-- MediaPipe.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-    <!-- TensorFlow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
-    <!-- TensorFlow.js Handpose Model -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.js"></script>
-    <!-- gest.js (Fixed Version) -->
-    <script src="gest.js"></script>
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* Reset and Basic Styling */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f4f4f4;
-            color: #333;
-            padding: 20px;
-        }
-        h1, h2 {
-            margin-bottom: 20px;
-            color: #2c3e50;
-            text-align: center;
-        }
-        /* Container Layout */
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        /* Video and Canvas */
-        #videoContainer {
-            position: relative;
-            width: 100%;
-            max-width: 640px;
-            height: 480px;
-            border: 2px solid #2c3e50;
-            border-radius: 10px;
-            overflow: hidden;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        #videoElement {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        #debugCanvas {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none; /* Toggle via gest.js for debugging */
-        }
-        /* Results Display */
-        #results {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 30px;
-            width: 100%;
-        }
-        .result-box {
-            background-color: #ecf0f1;
-            padding: 20px;
-            border-radius: 10px;
-            flex: 1 1 200px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: background-color 0.3s ease;
-            text-align: center;
-        }
-        .result-box.loaded {
-            background-color: #dff0d8; /* Light green */
-        }
-        .result-box.failed {
-            background-color: #f2dede; /* Light red */
-        }
-        .result-box h3 {
-            margin-bottom: 10px;
-            color: #2980b9;
-        }
-        .count {
-            font-size: 24px;
-            margin-top: 10px;
-            color: #c0392b;
-        }
-        /* Metrics Input */
-        #metricsContainer {
-            background-color: #ecf0f1;
-            padding: 20px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 800px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        #metricsContainer label {
-            font-size: 18px;
-            margin-right: 10px;
-        }
-        #metricsContainer input {
-            width: 80px;
-            padding: 5px;
-            font-size: 16px;
-            text-align: center;
-            margin-right: 20px;
-            border: 2px solid #bdc3c7;
-            border-radius: 5px;
-        }
-        #generateReport, #clearGraph {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: #27ae60;
-            color: white;
-            transition: background-color 0.3s ease;
-            margin-right: 10px;
-        }
-        #generateReport:hover, #clearGraph:hover {
-            background-color: #219150;
-        }
-        /* Report Section */
-        #report {
-            background-color: #ecf0f1;
-            padding: 20px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 800px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-align: left;
-            display: none;
-        }
-        #reportContent {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        /* Chart */
-        #chartContainer {
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 30px;
-        }
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            #metricsContainer {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            #metricsContainer label, #metricsContainer input {
-                margin-right: 0;
-            }
-            #metricsContainer button {
-                width: 100%;
-                margin-right: 0;
-            }
-            #results {
-                flex-direction: column;
-                align-items: center;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <title>Modern Left/Right Gesture Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Include the gesture library -->
+  <script src="gest.js"></script>
+
+  <style>
+    /* =============================
+       1. CSS Variables
+    ============================= */
+    :root {
+      --background-color: #f3f5f7;
+      --card-background: #ffffff;
+      --text-color: #333;
+      --primary-color: #00c8c8;
+      --secondary-color: #ff9040;
+      --accent-color: #ffca28;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+      --border-radius: 10px;
+      --spacing: 1rem;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+    }
+
+    /* Global Reset / Base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    html {
+      /* Fluid typography: scales between 14px and 20px based on viewport width */
+      font-size: clamp(14px, 1.2vw, 20px);
+    }
+    body {
+      font-family: var(--font-family);
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      padding: var(--spacing);
+    }
+    
+    h1, h2 {
+      margin-bottom: 0.5rem;
+    }
+
+    /* =============================
+       2. Layout Container
+    ============================= */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing);
+      max-width: 1200px;
+      margin: 0 auto;
+      /* Some top spacing from heading */
+      margin-top: var(--spacing);
+    }
+
+    /* =============================
+       3. Card Styles
+    ============================= */
+    .card {
+      background-color: var(--card-background);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: var(--spacing);
+      display: flex;
+      flex-direction: column;
+      position: relative; /* for status badge positioning */
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    }
+    .card h2 {
+      margin-bottom: var(--spacing);
+    }
+
+    /* =============================
+       4. Camera Card & Status Badge
+    ============================= */
+    .camera-wrapper {
+      width: 100%;
+      aspect-ratio: 16 / 9; /* preserves aspect ratio for video */
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--border-radius);
+      background: #000; /* fallback if video doesn't load */
+    }
+    #cameraFeed {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      /* Uncomment to mirror:
+         transform: scaleX(-1);
+      */
+    }
+    .badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background-color: #28a745;
+      color: #fff;
+      padding: 0.3rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+    }
+
+    /* =============================
+       5. Chart Card
+    ============================= */
+    #gestureChart {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: var(--border-radius);
+      background: #fafafa;
+    }
+
+    /* =============================
+       6. Terminal-Style Logs
+    ============================= */
+    .terminal-logs {
+      background: #1e1e1e;
+      color: #ccc;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: var(--spacing);
+      height: 300px;
+      overflow-y: auto;
+      font-family: Consolas, monospace;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .terminal-logs h2 {
+      color: #ccc;
+      font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .log-line {
+      margin-bottom: 0.3rem;
+      line-height: 1.3;
+      opacity: 0;
+      animation: fadeIn 0.4s forwards;
+    }
+    .log-left {
+      color: var(--primary-color);
+    }
+    .log-right {
+      color: var(--secondary-color);
+    }
+    .log-unknown {
+      color: #999;
+    }
+    /* Custom scrollbar */
+    .terminal-logs::-webkit-scrollbar {
+      width: 8px;
+    }
+    .terminal-logs::-webkit-scrollbar-track {
+      background: #333;
+      border-radius: 8px;
+    }
+    .terminal-logs::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 8px;
+    }
+
+    /* Simple fade-in animation for new log lines */
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+  </style>
 </head>
 <body>
+  <!-- Heading -->
+  <h1>Modern Gesture Detection: Left & Right</h1>
 
-    <div class="container">
-        <h1>Gesture Recognition Libraries Comparison</h1>
-        
-        <!-- Start Recognition Button -->
-        <button id="startButton" disabled>Start Recognition</button>
-
-        <!-- Video Feed with Debug Canvas -->
-        <div id="videoContainer">
-            <video id="videoElement" autoplay playsinline></video>
-            <canvas id="debugCanvas"></canvas>
-        </div>
-
-        <!-- Results Display -->
-        <div id="results">
-            <!-- MediaPipe.js Result Box -->
-            <div class="result-box" id="mediapipeResult">
-                <h3>MediaPipe.js</h3>
-                <p>Status: <span id="mediapipeStatus">Not Loaded</span></p>
-                <p>Left Count: <span class="count" id="mediapipeLeft">0</span></p>
-                <p>Right Count: <span class="count" id="mediapipeRight">0</span></p>
-            </div>
-            <!-- TensorFlow.js Result Box -->
-            <div class="result-box" id="tensorflowResult">
-                <h3>TensorFlow.js</h3>
-                <p>Status: <span id="tensorflowStatus">Not Loaded</span></p>
-                <p>Left Count: <span class="count" id="tensorflowLeft">0</span></p>
-                <p>Right Count: <span class="count" id="tensorflowRight">0</span></p>
-            </div>
-            <!-- gest.js Result Box -->
-            <div class="result-box" id="gestjsResult">
-                <h3>gest.js</h3>
-                <p>Status: <span id="gestjsStatus">Not Loaded</span></p>
-                <p>Left Count: <span class="count" id="gestjsLeft">0</span></p>
-                <p>Right Count: <span class="count" id="gestjsRight">0</span></p>
-            </div>
-        </div>
-
-        <!-- Gesture Counts Chart -->
-        <div id="chartContainer">
-            <canvas id="gestureChart"></canvas>
-        </div>
-
-        <!-- Metrics Input -->
-        <div id="metricsContainer">
-            <h2>Specify Expected Gestures</h2>
-            <label for="expectedLeft">Left Swaps:</label>
-            <input type="number" id="expectedLeft" min="0" value="0">
-            <label for="expectedRight">Right Swaps:</label>
-            <input type="number" id="expectedRight" min="0" value="0">
-            <button id="generateReport">Generate Report</button>
-            <button id="clearGraph">Clear Graph</button>
-        </div>
-
-        <!-- Report Section -->
-        <div id="report">
-            <h2>Gesture Recognition Report</h2>
-            <p id="reportContent"></p>
-        </div>
+  <!-- Grid container for our cards -->
+  <div class="grid-container">
+    <!-- Camera Card -->
+    <div class="card">
+      <h2>Camera Feed</h2>
+      <div class="camera-wrapper">
+        <video id="cameraFeed" autoplay playsinline></video>
+        <div class="badge">LIVE</div>
+      </div>
     </div>
 
-    <!-- Main Script -->
-    <script>
-        // Wait for the DOM to load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Elements
-            const startButton = document.getElementById('startButton');
-            const generateReportButton = document.getElementById('generateReport');
-            const clearGraphButton = document.getElementById('clearGraph');
+    <!-- Chart Card -->
+    <div class="card">
+      <h2>Gesture Chart</h2>
+      <canvas id="gestureChart" width="600" height="300"></canvas>
+    </div>
 
-            const videoElement = document.getElementById('videoElement');
-            const debugCanvas = document.getElementById('debugCanvas');
-            const debugCtx = debugCanvas.getContext('2d');
+    <!-- Logs Card -->
+    <div class="card">
+      <h2>Gesture Logs</h2>
+      <div id="log" class="terminal-logs">
+        <h2>Terminal Output</h2>
+        <!-- Log lines go here -->
+      </div>
+    </div>
+  </div>
 
-            const mediapipeStatus = document.getElementById('mediapipeStatus');
-            const mediapipeLeft = document.getElementById('mediapipeLeft');
-            const mediapipeRight = document.getElementById('mediapipeRight');
+  <script>
+    /************************************************************************
+     * 1) CAMERA SETUP
+     ************************************************************************/
+    const cameraVideo = document.getElementById("cameraFeed");
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => {
+        cameraVideo.srcObject = stream;
+      })
+      .catch(err => {
+        console.error("Error accessing camera:", err);
+        appendLog("Camera access denied or error.", "log-unknown");
+      });
 
-            const tensorflowStatus = document.getElementById('tensorflowStatus');
-            const tensorflowLeft = document.getElementById('tensorflowLeft');
-            const tensorflowRight = document.getElementById('tensorflowRight');
+    /************************************************************************
+     * 2) GESTURE COUNTS
+     ************************************************************************/
+    let leftCount  = 0;
+    let rightCount = 0;
 
-            const gestjsStatus = document.getElementById('gestjsStatus');
-            const gestjsLeft = document.getElementById('gestjsLeft');
-            const gestjsRight = document.getElementById('gestjsRight');
+    /************************************************************************
+     * 3) DRAW CHART
+     ************************************************************************/
+    function drawChart() {
+      const canvas = document.getElementById("gestureChart");
+      const ctx    = canvas.getContext("2d");
 
-            const expectedLeftInput = document.getElementById('expectedLeft');
-            const expectedRightInput = document.getElementById('expectedRight');
+      // Clear the canvas each time
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            const reportSection = document.getElementById('report');
-            const reportContent = document.getElementById('reportContent');
+      // Prepare data
+      const labels = ["Left", "Right"];
+      const counts = [leftCount, rightCount];
 
-            // Chart Setup
-            const ctxChart = document.getElementById('gestureChart').getContext('2d');
-            const gestureChart = new Chart(ctxChart, {
-                type: 'bar',
-                data: {
-                    labels: ['MediaPipe.js', 'TensorFlow.js', 'gest.js'],
-                    datasets: [
-                        {
-                            label: 'Left Swaps',
-                            data: [0, 0, 0],
-                            backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                        },
-                        {
-                            label: 'Right Swaps',
-                            data: [0, 0, 0],
-                            backgroundColor: 'rgba(54, 162, 235, 0.6)'
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                            text: 'Gesture Counts by Library'
-                        },
-                        tooltip: {
-                            enabled: true,
-                            mode: 'index',
-                            intersect: false,
-                        }
-                    },
-                    interaction: {
-                        mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true,
-                            precision: 0,
-                            title: {
-                                display: true,
-                                text: 'Number of Swaps'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Gesture Libraries'
-                            }
-                        }
-                    }
-                }
-            });
+      // Chart layout
+      const barWidth    = 80;
+      const gap         = 100;
+      const chartBottom = canvas.height - 50;
+      const maxValue    = Math.max(...counts) || 1; // avoid division by 0
+      const scale       = (canvas.height - 100) / maxValue;
 
-            // Gesture Counts
-            const gestureCounts = {
-                'MediaPipe.js': { 'Left': 0, 'Right': 0 },
-                'TensorFlow.js': { 'Left': 0, 'Right': 0 },
-                'gest.js': { 'Left': 0, 'Right': 0 }
-            };
+      // Font and styling
+      ctx.font      = "16px Consolas";
+      ctx.fillStyle = "#444";
 
-            // Flags to Check Initialization
-            let mediapipeInitialized = false;
-            let tensorflowInitialized = false;
-            let handposeModel = null;
+      // Draw grid lines (optional, for "modern" look)
+      ctx.strokeStyle = "#eee";
+      ctx.lineWidth = 1;
+      // e.g., 5 lines for scale
+      const steps = 5;
+      for (let i = 0; i <= steps; i++) {
+        const yPos = chartBottom - (chartBottom - 50) * (i / steps);
+        ctx.beginPath();
+        ctx.moveTo(40, yPos);
+        ctx.lineTo(canvas.width - 20, yPos);
+        ctx.stroke();
+      }
 
-            // Initialize MediaPipe.js
-            function initializeMediaPipe() {
-                mediapipeStatus.textContent = 'Loading...';
+      // Draw bars
+      for (let i = 0; i < counts.length; i++) {
+        const barHeight = counts[i] * scale;
+        const x         = 60 + i * (barWidth + gap);
+        const y         = chartBottom - barHeight;
 
-                const mpHands = new Hands({
-                    locateFile: (file) => {
-                        return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-                    }
-                });
+        // Different colors for each bar
+        ctx.fillStyle = (i === 0) ? getComputedStyle(document.documentElement)
+          .getPropertyValue('--primary-color') 
+          : getComputedStyle(document.documentElement)
+          .getPropertyValue('--secondary-color');
 
-                mpHands.setOptions({
-                    maxNumHands: 1,
-                    modelComplexity: 1,
-                    minDetectionConfidence: 0.7,
-                    minTrackingConfidence: 0.7
-                });
+        ctx.fillRect(x, y, barWidth, barHeight);
 
-                mpHands.onResults(onMediaPipeResults);
+        // Label under bar
+        ctx.fillStyle = "#333";
+        ctx.fillText(labels[i], x + 10, chartBottom + 20);
 
-                const camera = new Camera(videoElement, {
-                    onFrame: async () => {
-                        try {
-                            await mpHands.send({ image: videoElement });
-                        } catch (error) {
-                            console.error('MediaPipe.js Error:', error);
-                            mediapipeStatus.textContent = 'Failed';
-                            document.getElementById('mediapipeResult').classList.add('failed');
-                        }
-                    },
-                    width: 640,
-                    height: 480
-                });
+        // Value above bar
+        ctx.fillText(counts[i], x + (barWidth / 3), y - 10);
+      }
+    }
 
-                camera.start()
-                    .then(() => {
-                        mediapipeInitialized = true;
-                        mediapipeStatus.textContent = 'Running';
-                        document.getElementById('mediapipeResult').classList.add('loaded');
-                        updateStartButtonState();
-                    })
-                    .catch(error => {
-                        console.error('Camera Error:', error);
-                        mediapipeStatus.textContent = 'Failed';
-                        document.getElementById('mediapipeResult').classList.add('failed');
-                    });
-            }
+    /************************************************************************
+     * 4) LOGGING - TERMINAL STYLE
+     ************************************************************************/
+    function appendLog(message, className) {
+      const logDiv   = document.getElementById("log");
+      const logLine  = document.createElement("div");
+      logLine.classList.add("log-line");
+      if (className) {
+        logLine.classList.add(className);
+      }
+      logLine.textContent = message;
+      logDiv.appendChild(logLine);
+      // Auto-scroll to bottom
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
 
-            function onMediaPipeResults(results) {
-                if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                    const landmarks = results.multiHandLandmarks[0];
-                    // Determine Left or Right based on movement direction
-                    const wrist = landmarks[0];
-                    const indexFinger = landmarks[8];
+    /************************************************************************
+     * 5) GESTURE DETECTION & SUBSCRIPTION
+     ************************************************************************/
+    // Subscribe to gesture callbacks
+    gest.options.subscribeWithCallback(function(gesture) {
+      const now = new Date().toLocaleTimeString();
+      const dir = gesture.direction;
 
-                    // Initialize previous positions if not set
-                    if (!onMediaPipeResults.previousWristX) {
-                        onMediaPipeResults.previousWristX = wrist.x;
-                        return;
-                    }
+      // Only detect Left/Right
+      // Treat "Long up" as left, "Long down" as right
+      if (dir === "Left" || dir === "Long up") {
+        leftCount++;
+        appendLog(`[${now}] Left gesture detected`, "log-left");
+      }
+      else if (dir === "Right" || dir === "Long down") {
+        rightCount++;
+        appendLog(`[${now}] Right gesture detected`, "log-right");
+      }
+      else {
+        // appendLog(`[${now}] Unknown gesture: ${dir}`, "log-unknown");
+      }
 
-                    // Calculate deltaX (change in X position)
-                    const deltaX = wrist.x - onMediaPipeResults.previousWristX;
-                    onMediaPipeResults.previousWristX = wrist.x;
+      // Update the chart
+      drawChart();
+    });
 
-                    // Define a threshold for significant movement
-                    const movementThreshold = 0.05; // Adjust based on experimentation
+    // Start gesture detection
+    gest.start();
+    drawChart();  // Draw initial (empty) chart
 
-                    if (deltaX > movementThreshold) {
-                        // Right Swap Detected
-                        gestureCounts['MediaPipe.js']['Right'] += 1;
-                        mediapipeRight.textContent = gestureCounts['MediaPipe.js']['Right'];
-                        updateChart();
-                    } else if (deltaX < -movementThreshold) {
-                        // Left Swap Detected
-                        gestureCounts['MediaPipe.js']['Left'] += 1;
-                        mediapipeLeft.textContent = gestureCounts['MediaPipe.js']['Left'];
-                        updateChart();
-                    }
-
-                    // Optional: Draw landmarks on debugCanvas
-                    // Uncomment the following lines to enable
-                    /*
-                    debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-                    drawConnectors(debugCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-                    drawLandmarks(debugCtx, landmarks, {color: '#FF0000', lineWidth: 1});
-                    */
-                }
-            }
-
-            // Initialize TensorFlow.js
-            async function initializeTensorFlow() {
-                tensorflowStatus.textContent = 'Loading...';
-                try {
-                    handposeModel = await handpose.load();
-                    tensorflowInitialized = true;
-                    tensorflowStatus.textContent = 'Running';
-                    document.getElementById('tensorflowResult').classList.add('loaded');
-                    updateStartButtonState();
-                    startTensorFlowGestureRecognition();
-                } catch (error) {
-                    console.error('TensorFlow.js Handpose model failed to load:', error);
-                    tensorflowStatus.textContent = 'Failed';
-                    document.getElementById('tensorflowResult').classList.add('failed');
-                }
-            }
-
-            function startTensorFlowGestureRecognition() {
-                if (!handposeModel) return;
-
-                // Gesture Tracking Variables
-                let gestureCooldown = false; // To prevent multiple detections for the same gesture
-                let cooldownTime = 1500; // 1.5 seconds cooldown
-
-                // History of positions for smoother detection
-                const positionHistory = [];
-                const historySize = 5;
-
-                // Exponential Smoothing Variables
-                let smoothedX = null;
-                const smoothingFactor = 0.5; // Adjust between 0 (no smoothing) and 1 (no change)
-
-                async function detectGesture() {
-                    const predictions = await handposeModel.estimateHands(videoElement, true);
-                    if (predictions.length > 0) {
-                        const landmarks = predictions[0].landmarks;
-                        const wrist = landmarks[0];
-                        const indexFinger = landmarks[8];
-
-                        // Calculate the current X position (scaled to pixel value)
-                        const currentX = indexFinger[0] * videoElement.videoWidth; // Normalize to pixels
-
-                        // Apply Exponential Smoothing
-                        if (smoothedX === null) {
-                            smoothedX = currentX;
-                        } else {
-                            smoothedX = smoothingFactor * currentX + (1 - smoothingFactor) * smoothedX;
-                        }
-
-                        // Add to position history
-                        positionHistory.push(smoothedX);
-                        if (positionHistory.length > historySize) {
-                            positionHistory.shift();
-                        }
-
-                        // Calculate average delta over history
-                        if (positionHistory.length === historySize) {
-                            const deltas = [];
-                            for (let i = 1; i < positionHistory.length; i++) {
-                                deltas.push(positionHistory[i] - positionHistory[i - 1]);
-                            }
-                            const avgDelta = deltas.reduce((a, b) => a + b, 0) / deltas.length;
-
-                            if (!gestureCooldown) {
-                                if (avgDelta > 50) { // Increased Right Swap Threshold
-                                    // Right Swap Detected
-                                    gestureCounts['TensorFlow.js']['Right'] += 1;
-                                    tensorflowRight.textContent = gestureCounts['TensorFlow.js']['Right'];
-                                    updateChart();
-                                    triggerCooldown();
-                                } else if (avgDelta < -50) { // Increased Left Swap Threshold
-                                    // Left Swap Detected
-                                    gestureCounts['TensorFlow.js']['Left'] += 1;
-                                    tensorflowLeft.textContent = gestureCounts['TensorFlow.js']['Left'];
-                                    updateChart();
-                                    triggerCooldown();
-                                }
-                            }
-                        }
-
-                        // Optional: Draw landmarks on debugCanvas
-                        // Uncomment the following lines to enable
-                        /*
-                        debugCtx.clearRect(0, 0, debugCanvas.width, debugCanvas.height);
-                        drawConnectors(debugCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
-                        drawLandmarks(debugCtx, landmarks, {color: '#FF0000', lineWidth: 1});
-                        */
-                    }
-
-                    requestAnimationFrame(detectGesture);
-                }
-
-                function triggerCooldown() {
-                    gestureCooldown = true;
-                    setTimeout(() => {
-                        gestureCooldown = false;
-                    }, cooldownTime);
-                }
-
-                detectGesture();
-            }
-
-            // Initialize gest.js
-            function initializeGestJS() {
-                if (typeof gest !== 'undefined' && gest.options && typeof gest.options.subscribeWithCallback === 'function') {
-                    gest.options.subscribeWithCallback(function(gesture) {
-                        if (gesture.direction === "Left" || gesture.direction === "Down") {
-                            gestureCounts['gest.js']['Left'] += 1;
-                            gestjsLeft.textContent = gestureCounts['gest.js']['Left'];
-                            updateChart();
-                        } else if (gesture.direction === "Right" || gesture.direction === "Up") {
-                            gestureCounts['gest.js']['Right'] += 1;
-                            gestjsRight.textContent = gestureCounts['gest.js']['Right'];
-                            updateChart();
-                        } else {
-                            // Handle other gestures if necessary
-                            console.warn('Unknown gesture detected:', gesture.direction);
-                        }
-                    });
-
-                    gest.start();
-                    gestjsStatus.textContent = 'Running';
-                    document.getElementById('gestjsResult').classList.add('loaded');
-                    updateStartButtonState();
-                } else {
-                    console.error('gest.js is not loaded correctly or does not have subscribeWithCallback.');
-                    gestjsStatus.textContent = 'Failed';
-                    document.getElementById('gestjsResult').classList.add('failed');
-                }
-            }
-
-            // Update Start Button State
-            function updateStartButtonState() {
-                if (mediapipeInitialized && tensorflowInitialized && gestjsStatus.textContent === 'Running') {
-                    startButton.disabled = false;
-                }
-            }
-
-            // Start Recognition Handler
-            function startRecognition() {
-                startButton.disabled = true;
-                alert('Gesture recognition has started. Perform the specified number of left and right swaps.');
-            }
-
-            // Update Chart Function
-            function updateChart() {
-                gestureChart.data.datasets[0].data = [
-                    gestureCounts['MediaPipe.js']['Left'],
-                    gestureCounts['TensorFlow.js']['Left'],
-                    gestureCounts['gest.js']['Left']
-                ];
-                gestureChart.data.datasets[1].data = [
-                    gestureCounts['MediaPipe.js']['Right'],
-                    gestureCounts['TensorFlow.js']['Right'],
-                    gestureCounts['gest.js']['Right']
-                ];
-                gestureChart.update();
-            }
-
-            // Clear Graph Handler
-            function clearGraph() {
-                // Reset gesture counts
-                gestureCounts['MediaPipe.js']['Left'] = 0;
-                gestureCounts['MediaPipe.js']['Right'] = 0;
-                mediapipeLeft.textContent = '0';
-                mediapipeRight.textContent = '0';
-
-                gestureCounts['TensorFlow.js']['Left'] = 0;
-                gestureCounts['TensorFlow.js']['Right'] = 0;
-                tensorflowLeft.textContent = '0';
-                tensorflowRight.textContent = '0';
-
-                gestureCounts['gest.js']['Left'] = 0;
-                gestureCounts['gest.js']['Right'] = 0;
-                gestjsLeft.textContent = '0';
-                gestjsRight.textContent = '0';
-
-                // Update chart
-                updateChart();
-
-                // Hide report if visible
-                reportSection.style.display = 'none';
-            }
-
-            // Generate Report Handler
-            function generateReport() {
-                const expectedLeft = parseInt(expectedLeftInput.value) || 0;
-                const expectedRight = parseInt(expectedRightInput.value) || 0;
-
-                const reportHTML = `
-                    <strong>Expected Gestures:</strong><br>
-                    Left Swaps: ${expectedLeft}<br>
-                    Right Swaps: ${expectedRight}<br><br>
-                    <strong>Detected Gestures:</strong><br>
-                    MediaPipe.js - Left: ${gestureCounts['MediaPipe.js']['Left']}, Right: ${gestureCounts['MediaPipe.js']['Right']}<br>
-                    TensorFlow.js - Left: ${gestureCounts['TensorFlow.js']['Left']}, Right: ${gestureCounts['TensorFlow.js']['Right']}<br>
-                    gest.js - Left: ${gestureCounts['gest.js']['Left']}, Right: ${gestureCounts['gest.js']['Right']}<br><br>
-                    <strong>Comparison:</strong><br>
-                    MediaPipe.js - Left: ${gestureCounts['MediaPipe.js']['Left'] - expectedLeft}, Right: ${gestureCounts['MediaPipe.js']['Right'] - expectedRight}<br>
-                    TensorFlow.js - Left: ${gestureCounts['TensorFlow.js']['Left'] - expectedLeft}, Right: ${gestureCounts['TensorFlow.js']['Right'] - expectedRight}<br>
-                    gest.js - Left: ${gestureCounts['gest.js']['Left'] - expectedLeft}, Right: ${gestureCounts['gest.js']['Right'] - expectedRight}<br>
-                `;
-
-                reportContent.innerHTML = reportHTML;
-                reportSection.style.display = 'block';
-            }
-
-            // Initialize All Libraries
-            initializeMediaPipe();
-            initializeTensorFlow();
-            initializeGestJS();
-
-            // Attach Event Listeners
-            startButton.addEventListener('click', startRecognition);
-            generateReportButton.addEventListener('click', generateReport);
-            clearGraphButton.addEventListener('click', clearGraph);
-        });
-    </script>
+    /************************************************************************
+     * 6) OPTIONAL KEYBOARD FALLBACK FOR TESTING
+     ************************************************************************/
+    document.body.onkeydown = function(e) {
+      const now = new Date().toLocaleTimeString();
+      switch(e.keyCode) {
+        case 37: // Left arrow
+          leftCount++;
+          appendLog(`[${now}] Keyboard: Left Arrow`, "log-left");
+          drawChart();
+          break;
+        case 39: // Right arrow
+          rightCount++;
+          appendLog(`[${now}] Keyboard: Right Arrow`, "log-right");
+          drawChart();
+          break;
+        default:
+          // No action for other keys
+          return;
+      }
+    };
+  </script>
 </body>
 </html>
