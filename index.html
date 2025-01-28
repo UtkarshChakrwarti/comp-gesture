@@ -1,362 +1,157 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Modern Left/Right Gesture Demo</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Include the gesture library -->
-  <script src="gest.js"></script>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hand Gesture Recognition Benchmark</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    /* =============================
-       1. CSS Variables
-    ============================= */
-    :root {
-      --background-color: #f3f5f7;
-      --card-background: #ffffff;
-      --text-color: #333;
-      --primary-color: #00c8c8;
-      --secondary-color: #ff9040;
-      --accent-color: #ffca28;
-      --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-      --border-radius: 10px;
-      --spacing: 1rem;
-      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
-    }
-
-    /* Global Reset / Base */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    html {
-      /* Fluid typography: scales between 14px and 20px based on viewport width */
-      font-size: clamp(14px, 1.2vw, 20px);
-    }
-    body {
-      font-family: var(--font-family);
-      background-color: var(--background-color);
-      color: var(--text-color);
-      line-height: 1.5;
-      padding: var(--spacing);
-    }
-    
-    h1, h2 {
-      margin-bottom: 0.5rem;
-    }
-
-    /* =============================
-       2. Layout Container
-    ============================= */
-    .grid-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: var(--spacing);
-      max-width: 1200px;
-      margin: 0 auto;
-      /* Some top spacing from heading */
-      margin-top: var(--spacing);
-    }
-
-    /* =============================
-       3. Card Styles
-    ============================= */
-    .card {
-      background-color: var(--card-background);
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      padding: var(--spacing);
-      display: flex;
-      flex-direction: column;
-      position: relative; /* for status badge positioning */
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
-    }
-    .card h2 {
-      margin-bottom: var(--spacing);
-    }
-
-    /* =============================
-       4. Camera Card & Status Badge
-    ============================= */
-    .camera-wrapper {
-      width: 100%;
-      aspect-ratio: 16 / 9; /* preserves aspect ratio for video */
-      position: relative;
-      overflow: hidden;
-      border-radius: var(--border-radius);
-      background: #000; /* fallback if video doesn't load */
-    }
-    #cameraFeed {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      /* Uncomment to mirror:
-         transform: scaleX(-1);
-      */
-    }
-    .badge {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background-color: #28a745;
-      color: #fff;
-      padding: 0.3rem 0.6rem;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      box-shadow: var(--shadow);
-      font-weight: 600;
-    }
-
-    /* =============================
-       5. Chart Card
-    ============================= */
-    #gestureChart {
-      width: 100%;
-      height: auto;
-      display: block;
-      border-radius: var(--border-radius);
-      background: #fafafa;
-    }
-
-    /* =============================
-       6. Terminal-Style Logs
-    ============================= */
-    .terminal-logs {
-      background: #1e1e1e;
-      color: #ccc;
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow);
-      padding: var(--spacing);
-      height: 300px;
-      overflow-y: auto;
-      font-family: Consolas, monospace;
-      font-size: 0.9rem;
-      position: relative;
-    }
-    .terminal-logs h2 {
-      color: #ccc;
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-    }
-    .log-line {
-      margin-bottom: 0.3rem;
-      line-height: 1.3;
-      opacity: 0;
-      animation: fadeIn 0.4s forwards;
-    }
-    .log-left {
-      color: var(--primary-color);
-    }
-    .log-right {
-      color: var(--secondary-color);
-    }
-    .log-unknown {
-      color: #999;
-    }
-    /* Custom scrollbar */
-    .terminal-logs::-webkit-scrollbar {
-      width: 8px;
-    }
-    .terminal-logs::-webkit-scrollbar-track {
-      background: #333;
-      border-radius: 8px;
-    }
-    .terminal-logs::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 8px;
-    }
-
-    /* Simple fade-in animation for new log lines */
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
+    body { font-family: Arial, sans-serif; background: #f8f9fa; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .video-container { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 20px; }
+    .video-wrapper { flex: 1; background: #000; border-radius: 10px; overflow: hidden; }
+    .video-wrapper video { width: 100%; height: auto; }
+    .chart-container { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+    .metrics { display: flex; justify-content: space-between; margin-top: 20px; }
+    .metric-card { flex: 1; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); text-align: center; }
+    .metric-card h3 { margin: 0; font-size: 1.5rem; color: #333; }
+    .metric-card p { margin: 0; font-size: 1.2rem; color: #666; }
   </style>
 </head>
 <body>
-  <!-- Heading -->
-  <h1>Modern Gesture Detection: Left & Right</h1>
-
-  <!-- Grid container for our cards -->
-  <div class="grid-container">
-    <!-- Camera Card -->
-    <div class="card">
-      <h2>Camera Feed</h2>
-      <div class="camera-wrapper">
-        <video id="cameraFeed" autoplay playsinline></video>
-        <div class="badge">LIVE</div>
+  <div class="container">
+    <h1 class="text-center mb-4">Hand Gesture Recognition Benchmark</h1>
+    <div class="video-container">
+      <div class="video-wrapper">
+        <h3 class="text-center text-white">gest.js</h3>
+        <video id="gest-video" autoplay muted></video>
+      </div>
+      <div class="video-wrapper">
+        <h3 class="text-center text-white">MediaPipe Hands</h3>
+        <video id="mediapipe-video" autoplay muted></video>
+      </div>
+      <div class="video-wrapper">
+        <h3 class="text-center text-white">TensorFlow Handpose</h3>
+        <video id="tf-video" autoplay muted></video>
       </div>
     </div>
-
-    <!-- Chart Card -->
-    <div class="card">
-      <h2>Gesture Chart</h2>
-      <canvas id="gestureChart" width="600" height="300"></canvas>
+    <div class="chart-container">
+      <h2 class="text-center mb-4">Performance Comparison</h2>
+      <canvas id="performanceChart"></canvas>
     </div>
-
-    <!-- Logs Card -->
-    <div class="card">
-      <h2>Gesture Logs</h2>
-      <div id="log" class="terminal-logs">
-        <h2>Terminal Output</h2>
-        <!-- Log lines go here -->
+    <div class="metrics">
+      <div class="metric-card">
+        <h3>gest.js</h3>
+        <p id="gest-fps">FPS: 0</p>
+        <p id="gest-latency">Latency: 0ms</p>
+      </div>
+      <div class="metric-card">
+        <h3>MediaPipe</h3>
+        <p id="mediapipe-fps">FPS: 0</p>
+        <p id="mediapipe-latency">Latency: 0ms</p>
+      </div>
+      <div class="metric-card">
+        <h3>TensorFlow</h3>
+        <p id="tf-fps">FPS: 0</p>
+        <p id="tf-latency">Latency: 0ms</p>
       </div>
     </div>
   </div>
 
+  <!-- Bootstrap JS and Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose"></script>
+
+  <!-- gest.js -->
+  <script src="gest.js"></script>
+
+  <!-- Benchmark Script -->
   <script>
-    /************************************************************************
-     * 1) CAMERA SETUP
-     ************************************************************************/
-    const cameraVideo = document.getElementById("cameraFeed");
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => {
-        cameraVideo.srcObject = stream;
-      })
-      .catch(err => {
-        console.error("Error accessing camera:", err);
-        appendLog("Camera access denied or error.", "log-unknown");
-      });
+    // Performance Metrics
+    const gestMetrics = { fps: 0, latency: 0 };
+    const mediapipeMetrics = { fps: 0, latency: 0 };
+    const tfMetrics = { fps: 0, latency: 0 };
 
-    /************************************************************************
-     * 2) GESTURE COUNTS
-     ************************************************************************/
-    let leftCount  = 0;
-    let rightCount = 0;
-
-    /************************************************************************
-     * 3) DRAW CHART
-     ************************************************************************/
-    function drawChart() {
-      const canvas = document.getElementById("gestureChart");
-      const ctx    = canvas.getContext("2d");
-
-      // Clear the canvas each time
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Prepare data
-      const labels = ["Left", "Right"];
-      const counts = [leftCount, rightCount];
-
-      // Chart layout
-      const barWidth    = 80;
-      const gap         = 100;
-      const chartBottom = canvas.height - 50;
-      const maxValue    = Math.max(...counts) || 1; // avoid division by 0
-      const scale       = (canvas.height - 100) / maxValue;
-
-      // Font and styling
-      ctx.font      = "16px Consolas";
-      ctx.fillStyle = "#444";
-
-      // Draw grid lines (optional, for "modern" look)
-      ctx.strokeStyle = "#eee";
-      ctx.lineWidth = 1;
-      // e.g., 5 lines for scale
-      const steps = 5;
-      for (let i = 0; i <= steps; i++) {
-        const yPos = chartBottom - (chartBottom - 50) * (i / steps);
-        ctx.beginPath();
-        ctx.moveTo(40, yPos);
-        ctx.lineTo(canvas.width - 20, yPos);
-        ctx.stroke();
+    // Chart Initialization
+    const ctx = document.getElementById('performanceChart').getContext('2d');
+    const performanceChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['gest.js', 'MediaPipe', 'TensorFlow'],
+        datasets: [{
+          label: 'FPS',
+          data: [0, 0, 0],
+          backgroundColor: ['#4CAF50', '#2196F3', '#FF5722']
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: true } }
       }
-
-      // Draw bars
-      for (let i = 0; i < counts.length; i++) {
-        const barHeight = counts[i] * scale;
-        const x         = 60 + i * (barWidth + gap);
-        const y         = chartBottom - barHeight;
-
-        // Different colors for each bar
-        ctx.fillStyle = (i === 0) ? getComputedStyle(document.documentElement)
-          .getPropertyValue('--primary-color') 
-          : getComputedStyle(document.documentElement)
-          .getPropertyValue('--secondary-color');
-
-        ctx.fillRect(x, y, barWidth, barHeight);
-
-        // Label under bar
-        ctx.fillStyle = "#333";
-        ctx.fillText(labels[i], x + 10, chartBottom + 20);
-
-        // Value above bar
-        ctx.fillText(counts[i], x + (barWidth / 3), y - 10);
-      }
-    }
-
-    /************************************************************************
-     * 4) LOGGING - TERMINAL STYLE
-     ************************************************************************/
-    function appendLog(message, className) {
-      const logDiv   = document.getElementById("log");
-      const logLine  = document.createElement("div");
-      logLine.classList.add("log-line");
-      if (className) {
-        logLine.classList.add(className);
-      }
-      logLine.textContent = message;
-      logDiv.appendChild(logLine);
-      // Auto-scroll to bottom
-      logDiv.scrollTop = logDiv.scrollHeight;
-    }
-
-    /************************************************************************
-     * 5) GESTURE DETECTION & SUBSCRIPTION
-     ************************************************************************/
-    // Subscribe to gesture callbacks
-    gest.options.subscribeWithCallback(function(gesture) {
-      const now = new Date().toLocaleTimeString();
-      const dir = gesture.direction;
-
-      // Only detect Left/Right
-      // Treat "Long up" as left, "Long down" as right
-      if (dir === "Left" || dir === "Long up") {
-        leftCount++;
-        appendLog(`[${now}] Left gesture detected`, "log-left");
-      }
-      else if (dir === "Right" || dir === "Long down") {
-        rightCount++;
-        appendLog(`[${now}] Right gesture detected`, "log-right");
-      }
-      else {
-        // appendLog(`[${now}] Unknown gesture: ${dir}`, "log-unknown");
-      }
-
-      // Update the chart
-      drawChart();
     });
 
-    // Start gesture detection
-    gest.start();
-    drawChart();  // Draw initial (empty) chart
+    // Update Metrics
+    function updateMetrics() {
+      document.getElementById('gest-fps').textContent = `FPS: ${gestMetrics.fps.toFixed(2)}`;
+      document.getElementById('gest-latency').textContent = `Latency: ${gestMetrics.latency.toFixed(2)}ms`;
+      document.getElementById('mediapipe-fps').textContent = `FPS: ${mediapipeMetrics.fps.toFixed(2)}`;
+      document.getElementById('mediapipe-latency').textContent = `Latency: ${mediapipeMetrics.latency.toFixed(2)}ms`;
+      document.getElementById('tf-fps').textContent = `FPS: ${tfMetrics.fps.toFixed(2)}`;
+      document.getElementById('tf-latency').textContent = `Latency: ${tfMetrics.latency.toFixed(2)}ms`;
 
-    /************************************************************************
-     * 6) OPTIONAL KEYBOARD FALLBACK FOR TESTING
-     ************************************************************************/
-    document.body.onkeydown = function(e) {
-      const now = new Date().toLocaleTimeString();
-      switch(e.keyCode) {
-        case 37: // Left arrow
-          leftCount++;
-          appendLog(`[${now}] Keyboard: Left Arrow`, "log-left");
-          drawChart();
-          break;
-        case 39: // Right arrow
-          rightCount++;
-          appendLog(`[${now}] Keyboard: Right Arrow`, "log-right");
-          drawChart();
-          break;
-        default:
-          // No action for other keys
-          return;
-      }
-    };
+      performanceChart.data.datasets[0].data = [gestMetrics.fps, mediapipeMetrics.fps, tfMetrics.fps];
+      performanceChart.update();
+    }
+
+    // gest.js Implementation
+    const gestVideo = document.getElementById('gest-video');
+    gest.init();
+    gest.start();
+
+    // MediaPipe Implementation
+    const mediapipeVideo = document.getElementById('mediapipe-video');
+    const hands = new Hands({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 1,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    hands.onResults((results) => {
+      // Process results
+    });
+    const mediapipeCamera = new Camera(mediapipeVideo, {
+      onFrame: async () => {
+        await hands.send({ image: mediapipeVideo });
+      },
+      width: 300,
+      height: 225
+    });
+    mediapipeCamera.start();
+
+    // TensorFlow Handpose Implementation
+    const tfVideo = document.getElementById('tf-video');
+    async function loadHandpose() {
+      const model = await handpose.load();
+      const predictions = await model.estimateHands(tfVideo);
+      // Process predictions
+    }
+    loadHandpose();
+
+    // Benchmark Loop
+    setInterval(() => {
+      updateMetrics();
+    }, 1000);
   </script>
 </body>
 </html>
